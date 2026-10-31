@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.1.0",
+  "data_as_of": "2026-10-30",
+  "distinct_upstreams": 1,
+  "compared_sources": [
+    "ahbencat",
+    "jozhn",
+    "soschina_wind",
+    "tllandy"
+  ],
+  "comparison_count": 19,
+  "summary": {
+    "identical": 18,
+    "consistent": 1,
+    "divergent": 0,
+    "identical_ratio": 0.9474
+  },
+  "unverified_observed_months": {
+    "second_hand": [
+      "2026-10"
+    ],
+    "new": [
+      "2026-10"
+    ]
+  },
+  "verdict": "single_upstream",
+  "statement": "19 组可比月份中有 18 组数值完全一致（94.7%）。多个来源实为同一上游的转录，它们之间的一致性不构成独立校验。",
+  "comparisons": [
+    {"market": "new", "month": "2025-06", "left": {"source": "soschina_wind", "units": 16140, "kind": "reference"}, "right": {"source": "tllandy", "units": 16139, "kind": "observed"}, "drift": 1, "verdict": "consistent"},
+    {"market": "new", "month": "2025-07", "left": {"source": "soschina_wind", "units": 11852, "kind": "reference"}, "right": {"source": "tllandy", "units": 11852, "kind": "observed"}, "drift": 0, "verdict": "identical"},
+    {"market": "new", "month": "2025-08", "left": {"source": "soschina_wind", "units": 10377, "kind": "reference"}, "right": {"source": "tllandy", "units": 10377, "kind": "observed"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2025-06", "left": {"source": "soschina_wind", "units": 20774, "kind": "reference"}, "right": {"source": "tllandy", "units": 20774, "kind": "observed"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2025-07", "left": {"source": "soschina_wind", "units": 19337, "kind": "reference"}, "right": {"source": "tllandy", "units": 19337, "kind": "observed"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2025-08", "left": {"source": "soschina_wind", "units": 19912, "kind": "reference"}, "right": {"source": "tllandy", "units": 19912, "kind": "observed"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2025-11", "left": {"source": "ahbencat", "units": 22943, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 22943, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2025-12", "left": {"source": "ahbencat", "units": 22961, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 22961, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-01", "left": {"source": "ahbencat", "units": 22834, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 22834, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-02", "left": {"source": "ahbencat", "units": 11315, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 11315, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-03", "left": {"source": "ahbencat", "units": 31215, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 31215, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-04", "left": {"source": "ahbencat", "units": 28742, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 28742, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-05", "left": {"source": "ahbencat", "units": 28023, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 28023, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-06", "left": {"source": "ahbencat", "units": 25158, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 25158, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-07", "left": {"source": "ahbencat", "units": 23078, "kind": "observed"}, "right": {"source": "jozhn", "units": 23078, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-07", "left": {"source": "ahbencat", "units": 23078, "kind": "observed"}, "right": {"source": "soschina_wind", "units": 23078, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-07", "left": {"source": "jozhn", "units": 23078, "kind": "reference"}, "right": {"source": "soschina_wind", "units": 23078, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-08", "left": {"source": "ahbencat", "units": 23137, "kind": "observed"}, "right": {"source": "jozhn", "units": 23137, "kind": "reference"}, "drift": 0, "verdict": "identical"},
+    {"market": "second_hand", "month": "2026-09", "left": {"source": "ahbencat", "units": 23581, "kind": "observed"}, "right": {"source": "jozhn", "units": 23581, "kind": "reference"}, "drift": 0, "verdict": "identical"}
+  ]
+}

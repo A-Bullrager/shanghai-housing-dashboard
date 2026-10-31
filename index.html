@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>上海房产网签成交数据 · 二手房 / 一手房</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#1f2329; --muted:#6b7280;
+    --line:#e5e7eb; --sh:#2f6df0; --sh-soft:#dbe7ff; --nw:#e0682f; --nw-soft:#ffe2d4;
+    --up:#e2483d; --down:#1f9d55; --ref:#7a5cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+    line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 60px}
+  header h1{font-size:26px;margin:0 0 4px}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:22px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .card .k{font-size:13px;color:var(--muted);margin-bottom:6px}
+  .card .v{font-size:26px;font-weight:700}
+  .card .v small{font-size:13px;font-weight:500;color:var(--muted)}
+  .card.sh{border-top:3px solid var(--sh)}
+  .card.nw{border-top:3px solid var(--nw)}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 8px;margin:18px 0}
+  section h2{font-size:17px;margin:0 0 12px}
+  .chart-box{position:relative;height:320px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:600;background:#fafbfc}
+  tbody tr:hover{background:#fafbff}
+  tbody tr.is-ref{color:#6b7280}
+  .note{font-size:13px;color:var(--muted);margin-top:10px}
+  .src{font-size:13px;color:var(--muted);margin-top:18px;line-height:1.8}
+  .src a{color:var(--sh);text-decoration:none}
+  .err{padding:30px;text-align:center;color:var(--up);font-size:15px}
+  code{background:#eef1f5;padding:2px 6px;border-radius:5px;font-size:12px}
+  .legend-note{font-size:12px;color:var(--muted);margin-top:6px}
+  .badge{font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;white-space:nowrap}
+  .badge.ref{color:#6b7280;border:1px solid #d7dbe0;background:#f3f4f6}
+  .badge.ok{color:#1f9d55;border:1px solid #b9e6cd;background:#eef9f2}
+  .badge.bad{color:#c0332b;border:1px solid #f3c1bd;background:#fdf1f0}
+  .badge.warn{color:#a15c00;border:1px solid #f0cf9a;background:#fdf6ea}
+  .trust-line{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:14px;margin-bottom:4px}
+  .trust-big{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px}
+  .grid2 div{padding:8px 0;border-bottom:1px solid var(--line)}
+  .grid2 span{color:var(--muted)}
+  footer{margin-top:26px;font-size:12px;color:var(--muted);text-align:center}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>上海房产网签成交数据</h1>
+    <p id="sub">二手房 + 一手房 · 数据来源：网上房地产(fangdi) · 加载中…</p>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>二手房每日成交套数</h2>
+    <div class="chart-box"><canvas id="shDailyChart"></canvas></div>
+    <div class="legend-note">两条线分别对应两个独立来源，口径不同、时间区间不重叠，看板不做拼接。</div>
+  </section>
+
+  <section>
+    <h2>一手房每日成交套数</h2>
+    <div class="chart-box"><canvas id="nwDailyChart"></canvas></div>
+    <div class="legend-note">一手房取自官网首页滚动计数器快照，并非完整历史库，故覆盖区间远短于二手房。</div>
+  </section>
+
+  <section>
+    <h2>月度成交套数</h2>
+    <div class="chart-box"><canvas id="monthChart"></canvas></div>
+    <div class="legend-note">
+      <b>实心柱 = 实测</b>（由逐日明细求和，含面积与实测天数）；
+      <b>空心柱 = 参照</b>（第三方月度锚点，只有月总量，没有日度、没有面积）。
+      两者分属不同类型的序列，不混合、不互相覆盖。
+    </div>
+  </section>
+
+  <section>
+    <h2>二手房月度成交面积（万㎡）</h2>
+    <div class="chart-box"><canvas id="areaChart"></canvas></div>
+    <div class="legend-note">仅实测月份有面积。参照序列在设计上不携带面积字段，因此不会出现在此图中。</div>
+  </section>
+
+  <section>
+    <h2>月度明细</h2>
+    <div style="overflow:auto">
+      <table id="tbl">
+        <thead><tr><th>月份</th><th>市场</th><th>类型</th><th>实测天数</th><th>套数</th><th>面积(㎡)</th><th>日均套数</th><th>来源</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="note" id="tblNote"></div>
+  </section>
+
+  <section id="trust">
+    <h2>可信度：这四个来源其实是一次测量</h2>
+    <div id="trustBody" class="grid2"><div><span>正在读取 independence.json…</span></div></div>
+    <div class="note" id="trustNote"></div>
+  </section>
+
+  <section id="quality">
+    <h2>数据质量</h2>
+    <div id="qualityBody" class="grid2"><div><span>正在读取 health.json…</span></div></div>
+  </section>
+
+  <div class="src" id="src"></div>
+
+  <footer>GitHub Pages 静态托管：浏览器直接 <code>fetch('data/shanghai_housing.json')</code>，无后端。本地预览需起静态服务。</footer>
+</div>
+
+<script>
+const DATA_URL = "data/shanghai_housing.json";
+const HEALTH_URL = "data/health.json";
+const INDEP_URL = "data/independence.json";
+
+function fmt(n){ return (n==null? "—" : n.toLocaleString("en-US")); }
+function srcOf(rec){ return rec.provenance.source_ids.join("+"); }
+
+// 把日度记录按来源拆线，共享日期轴，空档留 null
+function splitBySource(daily, label, color){
+  const dates = [...new Set(daily.map(d=>d.date))].sort();
+  const srcSet = [...new Set(daily.flatMap(d=>d.provenance.source_ids))].sort();
+  const palette = [color, "#7a5cff", "#1f9d55", "#c0332b"];
+  const datasets = srcSet.map((s,i)=>({
+    label: `${label} · ${s}`,
+    data: dates.map(dt=>{
+      const hit = daily.find(r=>r.date===dt && r.provenance.source_ids.includes(s));
+      return hit ? hit.units : null;
+    }),
+    borderColor: palette[i % palette.length],
+    backgroundColor: "rgba(0,0,0,0)",
+    borderWidth: i===0 ? 2.2 : 1.6,
+    pointRadius: 0, tension: .15, spanGaps: false
+  }));
+  return { labels: dates, datasets };
+}
+
+// 月度: 实测用实心柱, 参照用空心柱, 一眼区分
+function monthlyCompare(sh, nw){
+  const obs = [sh.monthly.observed, nw.monthly.observed].flat();
+  const ref = [sh.monthly.reference, nw.monthly.reference].flat();
+  const months = [...new Set([...obs, ...ref].map(r=>r.month))].sort();
+  const pick = (rows, m) => { const hit = rows.find(r=>r.month===m); return hit ? hit.units : null; };
+
+  return {
+    labels: months,
+    datasets: [
+      { type:"bar", label:"二手房 · 实测", data: months.map(m=>pick(sh.monthly.observed, m)),
+        backgroundColor:"#2f6df0", order:2 },
+      { type:"bar", label:"一手房 · 实测", data: months.map(m=>pick(nw.monthly.observed, m)),
+        backgroundColor:"#e0682f", order:2 },
+      { type:"bar", label:"二手房 · 参照", data: months.map(m=>pick(sh.monthly.reference, m)),
+        backgroundColor:"rgba(47,109,240,0.16)", borderColor:"#2f6df0",
+        borderWidth:1, order:3 },
+      { type:"bar", label:"一手房 · 参照", data: months.map(m=>pick(nw.monthly.reference, m)),
+        backgroundColor:"rgba(224,104,47,0.16)", borderColor:"#e0682f",
+        borderWidth:1, order:3 },
+    ]
+  };
+}
+
+async function loadTrust(){
+  const box = document.getElementById("trustBody");
+  const note = document.getElementById("trustNote");
+  try{
+    const r = await fetch(INDEP_URL, {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const d = await r.json();
+    const s = d.summary || {};
+    const total = d.comparison_count || 0;
+    const ident = s.identical || 0;
+    const pct = total ? Math.round(ident / total * 100) : 0;
+    const badge = d.verdict === "single_upstream"
+      ? `<span class="badge warn">同源</span>`
+      : d.verdict === "partially_independent"
+        ? `<span class="badge ok">部分独立</span>`
+        : `<span class="badge ref">无重叠</span>`;
+
+    const unv = d.unverified_observed_months || {};
+    const unvText = Object.keys(unv).map(k=>{
+      const label = k === "second_hand" ? "二手房" : "一手房";
+      return unv[k].length ? `${label} ${unv[k].join("、")}` : null;
+    }).filter(Boolean).join("；") || "无";
+
+    box.innerHTML = [
+      `<div><span>可比月份</span><br><b class="trust-big">${total}</b> 组 ${badge}</div>`,
+      `<div><span>数值完全一致</span><br><b class="trust-big">${ident}</b> 组 · ${pct}%</div>`,
+      `<div><span>参与比较的来源</span><br>${(d.compared_sources||[]).join(" · ") || "—"}</div>`,
+      `<div><span>独立上游</span><br>${d.distinct_upstreams == null ? "—" : d.distinct_upstreams} 个</div>`,
+      `<div><span>只有单一来源的实测月</span><br>${unvText}</div>`,
+    ].join("");
+
+    note.innerHTML = `${d.statement}<br>` +
+      `差 0 套不是「互相印证」，而是「抄的是同一张表」——两次真正独立的测量必然存在随机误差。` +
+      `完整边界分析见 <a href="docs/TRUST.md">docs/TRUST.md</a>。`;
+  }catch(e){
+    box.innerHTML = `<div><span>无法读取 independence.json（${e.message}），不影响上方图表。</span></div>`;
+  }
+}
+
+async function loadQuality(){
+  const box = document.getElementById("qualityBody");
+  try{
+    const r = await fetch(HEALTH_URL, {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const h = await r.json();
+    const v = h.validation;
+    const badge = v.ok
+      ? `<span class="badge ok">门禁通过</span>`
+      : `<span class="badge bad">门禁未通过 · ${v.error_count} 项错误</span>`;
+    const rows = [
+      ["数据截至", `${h.data_as_of}`],
+      ["校验状态", `${badge} ${v.warning_count ? "· "+v.warning_count+" 项警告" : ""}`],
+      ["归档文件", `${h.archive.file_count} 个 · ${(h.archive.total_bytes/1024).toFixed(1)} KB`],
+      ["二手房面积覆盖", h.markets.second_hand.area_coverage_pct==null ? "—" : h.markets.second_hand.area_coverage_pct+"%"],
+      ["一手房面积覆盖", h.markets.new.area_coverage_pct==null ? "—" : h.markets.new.area_coverage_pct+"%"],
+    ];
+    h.sources.forEach(s=>{
+      const when = s.last_content_change ? s.last_content_change.slice(0,10) : "—";
+      rows.push([`来源 ${s.id}`, `${s.archived_files} 个归档件 · 最近变更 ${when}`]);
+    });
+    box.innerHTML = rows.map(([k,val])=>`<div><span>${k}</span><br>${val}</div>`).join("");
+  }catch(e){
+    box.innerHTML = `<div><span>无法读取 health.json（${e.message}），不影响上方图表。</span></div>`;
+  }
+}
+
+async function main(){
+  let data;
+  try{
+    const r = await fetch(DATA_URL, {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    data = await r.json();
+  }catch(e){
+    document.getElementById("sub").textContent = "数据加载失败：" + e.message;
+    document.querySelector(".wrap").insertAdjacentHTML("beforeend",
+      `<div class="err">无法加载 <code>data/shanghai_housing.json</code>。<br>若以 file:// 打开，请改用本地静态服务预览（<code>python -m http.server</code>）。</div>`);
+    return;
+  }
+
+  const meta = data.meta;
+  const sh = data.markets.second_hand;
+  const nw = data.markets.new;
+
+  document.getElementById("sub").textContent =
+    `二手房 + 一手房 · 数据截至 ${meta.data_as_of} · ${meta.sources.length} 个来源 · schema v${meta.schema_version}`;
+
+  const shLast = sh.daily[sh.daily.length-1];
+  const nwLast = nw.daily.length ? nw.daily[nw.daily.length-1] : null;
+  const shObs = sh.monthly.observed, nwObs = nw.monthly.observed;
+  const shRef = sh.monthly.reference, nwRef = nw.monthly.reference;
+
+  const cards = [
+    {cls:"", k:"数据截至", v:`${meta.data_as_of}`},
+    {cls:"sh", k:"最新二手房日成交", v:shLast?`${fmt(shLast.units)} <small>套 · ${shLast.date}</small>`:"—"},
+    {cls:"nw", k:"最新一手房日成交", v:nwLast?`${fmt(nwLast.units)} <small>套 · ${nwLast.date}</small>`:"—"},
+    {cls:"sh", k:"二手房覆盖", v:`${sh.daily.length} 天<small> · 实测 ${shObs.length} 月 / 参照 ${shRef.length} 月</small>`},
+    {cls:"nw", k:"一手房覆盖", v:`${nw.daily.length} 天<small> · 实测 ${nwObs.length} 月 / 参照 ${nwRef.length} 月</small>`},
+  ];
+  document.getElementById("cards").innerHTML = cards.map(c=>
+    `<div class="card ${c.cls}"><div class="k">${c.k}</div><div class="v">${c.v}</div></div>`).join("");
+
+  const lineOpts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:"top"} },
+    scales:{ x:{ticks:{maxTicksLimit:14, autoSkip:true}},
+             y:{beginAtZero:true, title:{display:true,text:"套"}} }
+  };
+
+  new Chart(document.getElementById("shDailyChart"), {
+    type:"line", data: splitBySource(sh.daily, "二手房", "#2f6df0"), options: lineOpts });
+  new Chart(document.getElementById("nwDailyChart"), {
+    type:"line", data: splitBySource(nw.daily, "一手房", "#e0682f"), options: lineOpts });
+
+  new Chart(document.getElementById("monthChart"), {
+    data: monthlyCompare(sh, nw),
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:"top"},
+        tooltip:{ callbacks:{ label:(c)=> c.dataset.label+": "+(c.parsed.y==null?"—":fmt(c.parsed.y)+" 套") } } },
+      scales:{ x:{ticks:{maxTicksLimit:24, autoSkip:true}},
+               y:{beginAtZero:true, title:{display:true,text:"套"}} } }
+  });
+
+  const areaRows = shObs.filter(m=>m.area_m2!=null);
+  new Chart(document.getElementById("areaChart"), {
+    type:"bar",
+    data:{ labels: areaRows.map(m=>m.month),
+           datasets:[{ label:"二手房 月成交面积(万㎡)",
+                       data: areaRows.map(m=>+(m.area_m2/10000).toFixed(1)),
+                       backgroundColor:"#7aa2f7" }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{beginAtZero:true, title:{display:true,text:"万㎡"}} } }
+  });
+
+  const rows = [];
+  shObs.forEach(m=>rows.push({month:m.month, market:"二手房", kind:"实测", days:m.days_observed,
+                              units:m.units, area:m.area_m2, avg:m.avg_daily_units, src:srcOf(m)}));
+  shRef.forEach(m=>rows.push({month:m.month, market:"二手房", kind:"参照", days:null,
+                              units:m.units, area:null, avg:null, src:srcOf(m)}));
+  nwObs.forEach(m=>rows.push({month:m.month, market:"一手房", kind:"实测", days:m.days_observed,
+                              units:m.units, area:m.area_m2, avg:m.avg_daily_units, src:srcOf(m)}));
+  nwRef.forEach(m=>rows.push({month:m.month, market:"一手房", kind:"参照", days:null,
+                              units:m.units, area:null, avg:null, src:srcOf(m)}));
+  rows.sort((a,b)=> a.month===b.month ? (a.market<b.market?-1:1) : (a.month<b.month?-1:1));
+
+  document.querySelector("#tbl tbody").innerHTML = rows.map(r=>{
+    const color = r.market==="二手房" ? "#2f6df0" : "#e0682f";
+    const isRef = r.kind==="参照";
+    const kindCell = isRef
+      ? `<span class="badge ref">参照</span>`
+      : `实测`;
+    return `<tr class="${isRef?"is-ref":""}">`+
+      `<td>${r.month}</td>`+
+      `<td style="color:${color}">${r.market}</td>`+
+      `<td>${kindCell}</td>`+
+      `<td>${r.days==null?"—":r.days}</td>`+
+      `<td>${fmt(r.units)}</td>`+
+      `<td>${r.area==null?"—":fmt(r.area)}</td>`+
+      `<td>${r.avg==null?"—":fmt(r.avg)}</td>`+
+      `<td style="color:${isRef?"#9aa0aa":"inherit"}">${r.src}</td></tr>`;
+  }).join("");
+
+  document.getElementById("tblNote").textContent =
+    `共 ${rows.length} 行，其中实测 ${rows.filter(r=>r.kind==="实测").length} 行、参照 ${rows.filter(r=>r.kind==="参照").length} 行。` +
+    `参照行没有日度数据，因此「实测天数」「面积」「日均」三列为空——这不是缺失，而是该序列本身不包含这些维度。` +
+    `日均按实测天数计算，未剔除周末与节假日。`;
+
+  document.getElementById("src").innerHTML = "<b>数据来源</b><br>" + meta.sources.map(s=>
+    `• <a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`+
+    ` — ${s.granularity} · ${s.metrics.join("/")} · 获取方式 <code>${s.acquire_method}</code>`+
+    (s.notes?`<br><span style="padding-left:14px">${s.notes}</span>`:"")
+  ).join("<br>");
+
+  loadQuality();
+  loadTrust();
+}
+main();
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# 数据来源与权利声明
+
+本仓库包含两类性质完全不同的内容，适用不同的权利规则。
+
+## 代码
+
+`build/`、`tests/`、`index.html` 及构建脚本 —— MIT，全文见 [LICENSE](LICENSE)。
+
+## 数据
+
+`data/`、`cache/upstream/` 下的内容派生自下列第三方来源。
+**本仓库不对这些内容授予任何许可**，仅作研究用途的格式转换、聚合与引用。
+
+| 来源 | 提供内容 | 权利状态 |
+|---|---|---|
+| [ahbencat/shanghai_fangdi_data](https://github.com/ahbencat/shanghai_fangdi_data) | 二手房 / 一手房日度网签与面积 | **未声明 license**（默认保留所有权利） |
+| [tllandy/Shanghai-Property-Market-Calendar](https://github.com/tllandy/Shanghai-Property-Market-Calendar) | 2025-06~08 日度套数 | **未声明 license**（默认保留所有权利） |
+| 开源证券研究所（Wind 数据） | 月度网签锚点 | 研究报告引用，非再分发许可 |
+| [jozhn/shanghai-house-data-view](https://github.com/jozhn/shanghai-house-data-view) | 月度套数 / 面积 / 成交金额 | **未声明 license**（默认保留所有权利） |
+
+上述数据的原始权利人，最终指向**上海市网上房地产（www.fangdi.com.cn）**的网签公示。
+
+### 本仓库对这些数据做了什么
+
+1. **格式转换** —— Markdown 表格、xlsx、研报图表读数统一为 JSON / CSV。
+2. **聚合** —— 日度明细求和为月度总量。
+3. **引用** —— 逐行标注来源 ID、采集方式、抓取时刻。
+4. **原样归档** —— `cache/upstream/` 保存上游字节，供校验转录是否忠实。
+
+### 使用者的责任
+
+- 商用、再分发、或用于任何产生商业利益的产品，请**自行向原始权利人取得授权**。
+- 本项目不因收录而对这些数据主张任何权利，也不对数据的准确性、完整性、
+  时效性作任何明示或默示担保。
+- 若原始权利人提出异议，相应内容将被移除。
+
+## 免责
+
+数据按「现状」提供，不附带任何担保。因使用本数据集产生的任何后果，
+由使用者自行承担。

@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.1.0",
+  "data_as_of": "2026-10-30",
+  "validation": {
+    "ok": true,
+    "error_count": 0,
+    "warning_count": 1,
+    "errors": [],
+    "warnings": [
+      {"code": "PRIMARY_SOURCE_STALE", "message": "官网直采最后成功于 2026-10-30（昨日），今日尚未采集", "context": {"last_capture": "2026-10-30"}}
+    ]
+  },
+  "independence": {
+    "verdict": "single_upstream",
+    "statement": "19 组可比月份中有 18 组数值完全一致（94.7%）。多个来源实为同一上游的转录，它们之间的一致性不构成独立校验。",
+    "distinct_upstreams": 1,
+    "compared_sources": [
+      "ahbencat",
+      "jozhn",
+      "soschina_wind",
+      "tllandy"
+    ],
+    "comparison_count": 19,
+    "summary": {
+      "identical": 18,
+      "consistent": 1,
+      "divergent": 0,
+      "identical_ratio": 0.9474
+    },
+    "unverified_observed_months": {
+      "second_hand": [
+        "2026-10"
+      ],
+      "new": [
+        "2026-10"
+      ]
+    }
+  },
+  "markets": {
+    "second_hand": {
+      "label": "二手房",
+      "daily_records": 456,
+      "observed_months": 15,
+      "reference_months": 7,
+      "first_month": "2025-01",
+      "last_month": "2026-10",
+      "area_coverage_pct": 79.8,
+      "incomplete_months": []
+    },
+    "new": {
+      "label": "一手房",
+      "daily_records": 120,
+      "observed_months": 4,
+      "reference_months": 16,
+      "first_month": "2025-01",
+      "last_month": "2026-10",
+      "area_coverage_pct": 23.3,
+      "incomplete_months": []
+    }
+  },
+  "sources": [
+    {"id": "fangdi_official", "acquire_method": "headless_chrome_dump", "archived_files": 3, "bytes": 172911, "last_content_change": "2026-10-30T08:15:39Z"},
+    {"id": "ahbencat", "acquire_method": "http_get", "archived_files": 12, "bytes": 16564, "last_content_change": "2026-10-31T19:11:42Z"},
+    {"id": "tllandy", "acquire_method": "manual_download", "archived_files": 2, "bytes": 26939, "last_content_change": "2026-10-30T07:24:01Z"},
+    {"id": "soschina_wind", "acquire_method": "manual_transcription", "archived_files": 1, "bytes": 415, "last_content_change": "2026-10-30T07:24:13Z"},
+    {"id": "jozhn", "acquire_method": "manual_transcription", "archived_files": 1, "bytes": 358, "last_content_change": "2026-10-30T07:24:13Z"}
+  ],
+  "archive": {
+    "file_count": 19,
+    "total_bytes": 217187
+  }
+}

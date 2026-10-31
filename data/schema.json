@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/A-Bullrager/shanghai-housing-dashboard/data/schema.json",
+  "title": "上海房产网签成交数据集",
+  "description": "二手房 / 一手房网签数据的规范形态。observed 与 reference 是两种不同的对象类型，不是同一数组靠标志位区分。",
+  "type": "object",
+  "required": ["meta", "markets", "anchors", "crosscheck", "reference_series"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schema_version", "title", "data_as_of", "timezone", "metric_definition", "kinds", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "data_as_of": {
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "数据集中最后一条日度记录的日期。也是构建的确定性锚点：无新数据时该值不变，产物字节不变。"
+        },
+        "timezone": { "type": "string" },
+        "metric_definition": { "type": "object" },
+        "kinds": { "type": "object" },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "url", "license", "granularity", "metrics", "role", "acquire_method", "notes"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "name": { "type": "string" },
+              "url": { "type": "string" },
+              "license": { "type": "string" },
+              "granularity": { "type": "string" },
+              "metrics": { "type": "array", "items": { "type": "string" } },
+              "role": {
+                "type": "string",
+                "enum": ["primary", "fallback", "historical"],
+                "description": "primary = 每日直采主源；fallback = 主源不可用时的备用（与主源同日必须逐值相等）；historical = 已冻结，只补历史。"
+              },
+              "acquire_method": { "type": "string", "enum": ["headless_chrome_dump", "http_get", "manual_download", "manual_transcription"] },
+              "notes": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "markets": {
+      "type": "object",
+      "required": ["second_hand", "new"],
+      "additionalProperties": false,
+      "properties": {
+        "second_hand": { "$ref": "#/definitions/market" },
+        "new": { "$ref": "#/definitions/market" }
+      }
+    },
+    "anchors": {
+      "type": "object",
+      "description": "第三方月度锚点的全量记录，**包含**已被 observed 覆盖的月份。用途只有一个：让同一月份存在两份独立的证词，从而可被比对。不要用它做展示——展示请用 markets.*.monthly.reference。",
+      "required": ["note", "second_hand", "new"],
+      "additionalProperties": false,
+      "properties": {
+        "note": { "type": "string" },
+        "second_hand": { "type": "array", "items": { "$ref": "#/definitions/reference_month" } },
+        "new": { "type": "array", "items": { "$ref": "#/definitions/reference_month" } }
+      }
+    },
+    "crosscheck": {
+      "type": "object",
+      "description": "官网直采与镜像仓在同一天的逐日比对结果。二者同为 fangdi 口径，数值必须相等，因此这是解析正确性的硬检测，但不是对上游数据本身的独立验证。",
+      "required": ["note", "summary", "days"],
+      "additionalProperties": false,
+      "properties": {
+        "note": { "type": "string" },
+        "summary": {
+          "type": "object",
+          "required": ["compared_days", "agree_days", "disagree_days", "max_drift"],
+          "additionalProperties": false,
+          "properties": {
+            "compared_days": { "type": "integer", "minimum": 0 },
+            "agree_days": { "type": "integer", "minimum": 0 },
+            "disagree_days": { "type": "integer", "minimum": 0 },
+            "max_drift": { "type": "number", "minimum": 0 }
+          }
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "market", "sources", "agree", "drift"],
+            "additionalProperties": false,
+            "properties": {
+              "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+              "market": { "type": "string", "enum": ["second_hand", "new"] },
+              "sources": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "required": ["source_id", "units"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_id": { "type": "string" },
+                    "units": { "type": "integer", "minimum": 0 },
+                    "area_m2": { "type": ["number", "null"] }
+                  }
+                }
+              },
+              "agree": { "type": "boolean" },
+              "drift": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "reference_series": {
+      "type": "object",
+      "required": ["second_hand_monthly_compare"],
+      "additionalProperties": false,
+      "properties": {
+        "second_hand_monthly_compare": {
+          "type": "object",
+          "required": ["label", "unit_notes", "rows"],
+          "additionalProperties": false,
+          "properties": {
+            "label": { "type": "string" },
+            "unit_notes": { "type": "object" },
+            "rows": { "type": "array", "items": { "$ref": "#/definitions/compare_row" } }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "market": {
+      "type": "object",
+      "required": ["label", "daily", "monthly"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "daily": { "type": "array", "items": { "$ref": "#/definitions/daily_record" } },
+        "monthly": {
+          "type": "object",
+          "required": ["observed", "reference"],
+          "additionalProperties": false,
+          "properties": {
+            "observed": { "type": "array", "items": { "$ref": "#/definitions/observed_month" } },
+            "reference": { "type": "array", "items": { "$ref": "#/definitions/reference_month" } }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["kind", "source_ids", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "enum": ["observed", "reference"] },
+        "source_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "method": { "type": "string", "minLength": 1 }
+      }
+    },
+    "daily_record": {
+      "type": "object",
+      "required": ["date", "units", "area_m2", "area_quality", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "units": { "type": "integer", "minimum": 0 },
+        "area_m2": { "type": ["number", "null"], "minimum": 0 },
+        "area_quality": { "type": ["string", "null"], "enum": ["approximate", "exact", null] },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "observed_month": {
+      "type": "object",
+      "description": "由日度明细求和得到。面积字段存在但值可能为 null（来源不提供面积）。",
+      "required": ["month", "units", "area_m2", "days_observed", "avg_daily_units", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+        "units": { "type": "integer", "minimum": 0 },
+        "area_m2": { "type": ["number", "null"] },
+        "days_observed": { "type": "integer", "minimum": 1, "maximum": 31 },
+        "avg_daily_units": { "type": ["number", "null"] },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "reference_month": {
+      "type": "object",
+      "description": "第三方月度锚点。刻意**不包含**面积字段：这个概念在参照数据里不存在，用 null 表达会诱导下游误算。additionalProperties=false 保证这一点不会被悄悄破坏。",
+      "required": ["month", "units", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+        "units": { "type": "integer", "minimum": 0 },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "compare_row": {
+      "type": "object",
+      "required": ["month", "base", "current", "yoy_pct", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+        "base": { "$ref": "#/definitions/compare_side" },
+        "current": { "$ref": "#/definitions/compare_side" },
+        "yoy_pct": {
+          "type": "object",
+          "required": ["units", "area", "amount"],
+          "additionalProperties": false,
+          "properties": {
+            "units": { "type": "number" },
+            "area": { "type": "number" },
+            "amount": { "type": "number" }
+          }
+        },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "compare_side": {
+      "type": "object",
+      "required": ["year", "units", "area_wan_m2", "amount_yi", "avg_price_wan_per_m2"],
+      "additionalProperties": false,
+      "properties": {
+        "year": { "type": "integer" },
+        "units": { "type": "integer", "minimum": 0 },
+        "area_wan_m2": { "type": "number", "minimum": 0 },
+        "amount_yi": { "type": "number", "minimum": 0 },
+        "avg_price_wan_per_m2": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
